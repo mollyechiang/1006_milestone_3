@@ -528,11 +528,17 @@ twoway (scatter coef bandwidth if bandwidth>=2 & bandwidth<=20 & kernel=="tri" &
   xlab(, labsize(small)) ytitle("", size(small)) title("Effect of 1947 reform (triangle)", color(black) size(medium)) xtitle("Bandwidth")
 graph save Graph "g1.gph", replace
 
+# second graph is the same as the first, but specifies to only use values that have 
+# a kernel of uni and a version of rf, save this graph as g2
+
 twoway (scatter coef bandwidth if bandwidth>=2 & bandwidth<=20 & kernel=="uni" & version=="rf", mcolor(black)) ///
   (rcap min95 max95 bandwidth if bandwidth>=2 & bandwidth<=20 & kernel=="uni" & version=="rf", vertical lcolor(black)), ///
   legend(off) graphregion(fcolor(white) lcolor(white)) xlab(2(1) 20, valuelabel labsize(small) nogrid) ylab(, nogrid) yline(0, lcolor(black) lpattern(dash)) ///
   xlab(, labsize(small)) ytitle("", size(small)) title("Effect of 1947 reform (rectangular)", color(black) size(medium)) xtitle("Bandwidth")
 graph save Graph "g2.gph", replace
+
+# again the same for the third graph, but for kernel = tri and version = years
+# save this as g3
 
 twoway (scatter coef bandwidth if bandwidth>=2 & bandwidth<=20 & kernel=="tri" & version=="years", mcolor(black)) ///
   (rcap min95 max95 bandwidth if bandwidth>=2 & bandwidth<=20 & kernel=="tri" & version=="years", vertical lcolor(black)), ///
@@ -540,19 +546,37 @@ twoway (scatter coef bandwidth if bandwidth>=2 & bandwidth<=20 & kernel=="tri" &
   xlab(, labsize(small)) ytitle("", size(small)) title("Effect of years of schooling (triangle)", color(black) size(medium)) xtitle("Bandwidth")
 graph save Graph "g3.gph", replace
 
+# same for fourth graph, but with the final combinations of kernel = uni and version = years
+# save this as g4
+
 twoway (scatter coef bandwidth if bandwidth>=2 & bandwidth<=20 & kernel=="uni" & version=="years", mcolor(black)) ///
   (rcap min95 max95 bandwidth if bandwidth>=2 & bandwidth<=20 & kernel=="uni" & version=="years", vertical lcolor(black)), ///
   legend(off) graphregion(fcolor(white) lcolor(white)) xlab(2(1) 20, valuelabel labsize(small) nogrid) ylab(, nogrid) yline(0, lcolor(black) lpattern(dash)) ///
   xlab(, labsize(small)) ytitle("", size(small)) title("Effect of years of schooling (rectangular)", color(black) size(medium)) xtitle("Bandwidth")
 graph save Graph "g4.gph", replace
 
+# plot g1, g2, g3, and g4 all together in a square format (2 rows and columns)
+# add a subtitle to this combination of graphs with color specifications
+
 gr combine "g1" "g2" "g3" "g4", rows(2) cols(2) subtitle(, color(black) fcolor(white) lcolor(white)) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
   
 drop bandwidth-max95
 
 
+# another appendix table 
 
 *** Appendix Table 3: Higher-order polynomials and CCT bias correction
+
+# this time we will be running the same rdrobust function on con (voting conservative
+# or not) and yearat14, but with different order polynomials for the local regression
+# and bias correction
+# for all of the rdrobust commands still keep the cutoff of 1947, triangular kernel function 
+# and some will use bwselect(IK) or bwselect(CCT) to select bandwidth using different 
+# mathematical functions
+# some will also use fuzzy(leave) to run a fuzzy instead of normal regression discontinuity
+# the results of this table will let us know how fitting different order polynomials to
+# our data changes the effect of the 1947 reform on voting conservative (if at all)
+
 rdrobust con yearat14, c(1947) p(2) q(3) kernel(tri) bwselect(IK)
 rdrobust con yearat14, c(1947) p(3) q(4) kernel(tri) bwselect(IK)
 rdrobust con yearat14, c(1947) p(2) q(3) kernel(tri) bwselect(IK) fuzzy(leave)
@@ -563,6 +587,15 @@ rdrobust con yearat14, c(1947) fuzzy(leave) p(1) q(2) kernel(tri) bwselect(CCT) 
 
 
 *** Appendix Figure 2: Placebo reforms
+
+# create appendix figure that detects the effect of 'placebo reforms"
+# to do this rdrobust was run on con and yearat14 with the cutoff year
+# changing (same p = 1, q = 2, kernel = tri, bwselect = IK for all)
+# this will let us know if people were more likely to vote conservative
+# after random years (in which a reform did not occur) to see if our observed
+# result of increased likliness of voting conservative after the reform in 1947
+# holds up
+
 rdrobust con yearat14, c(1937) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust con yearat14, c(1938) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust con yearat14, c(1939) p(1) q(2) kernel(tri) bwselect(IK)
@@ -575,6 +608,10 @@ rdrobust con yearat14, c(1945) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust con yearat14, c(1946) p(1) q(2) kernel(tri) bwselect(IK)
 
 * Note: copy these estimates from the above loop into the Stata data editor for graphical presentation
+
+# copy the results of the functions above into the code to create appendix fig 4
+# with the placebo year, coef (increased likliness to vote conservative) and se
+
 placebo	coef	se
 1937	-0.00928	0.0202
 1938	-0.02086	0.02031
@@ -587,8 +624,15 @@ placebo	coef	se
 1945	0.01058	0.02132
 1946	0.02654	0.0211
 
+# create the 95% CIs just as we did for figure 4 (creating 2 new columns min95 and max95)
+
 g min95 = coef - 1.96 * se
 g max95 = coef + 1.96 * se
+
+# create a plot with twoway, make it a scatter with coef on y axis and placebo year on the x,
+# specify color
+# add a range plot with caps using the 95% CIs and placebo year on the x (indicate vertical and color)
+# turn off legent, add background color and axis labels titles, colors, and sizes etc
 
 twoway (scatter coef placebo, mcolor(black)) ///
   (rcap min95 max95 placebo, vertical lcolor(black)), ///
@@ -599,13 +643,29 @@ twoway (scatter coef placebo, mcolor(black)) ///
 
 *** Appendix Table 4: LFS exclusion restriction violations
 
+# aopendix table 4 is meant to show that politcal preference
+# was not changing bc of something other than schooling that may have
+# been affected by the 1947 reform -- for example, bc of staying in school more years
+# individuals may have had less dependent children, get married or have kids later
+# which could affect political preference but is not a result of schooling itself
+# just a result of more years in school
+
+# to do this first preserve the LFS data (from another source so don't want to mess it up)
+# that we will use 
+
 preserve
 
 use "LFS Data Replication.dta", clear
 
+# then run rdrobust on these variabels (number dependent childre, age of oldest dependent
+# child and age when married) and yearat14, using cutoff of 1947, p = 1, q = 2, kernel = tri,
+# and beswlect(IK) to detect if these variable are effected by the 1947 reform
+
 rdrobust number_dep_child yearat14 , c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust age_old_dep_child yearat14 , c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust married_once yearat14 , c(1947) p(1) q(2) kernel(tri) bwselect(IK)
+
+# then restore the data to what it looked like when we preserved
 
 restore
 
@@ -613,18 +673,43 @@ restore
 
 ****************************** MECHANISMS
 
+# this code creates table two - which aims to investigate if people continue
+# to vote conservative even after they are retired (the implication being that people
+# with more edu had higher incomes and that was why they voted conservative, once people
+# got old and weren't experiencing the results of high incomes, they stopped voting
+# conservative, which was found to be true)
+
 *** Table 2: Raising social class, Heterogeneity by age (above 60), Become a Conservative partisan, and Decide before the electoral campaign
+
+# first see if people under 60 were more likely to be manual workers before and after the reform
+# test this by running two different rdrobusts between nonmanual and yearat14 if age < 60
+# in the first have no fuzzy input, in the second use fuzzy(leave) - for both cutoff is 1947
+# p=1, q=2, kernel = tri and bwselect(IK)
+# sum nonmanual if individuals were under 60 and 14 between 1934 and 1960
+
 rdrobust nonmanual yearat14 if age<60, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust nonmanual yearat14 if age<60, fuzzy(leave) c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 sum nonmanual if age<60 & yearat14>=1934 & yearat14<=1960
+
+# now run rdrobust on voting con and yearat14 for people under 60
+# same speficifcations and again one time without fuzzy(leave) and one time with
+# sum con if individuals were under 60 and 14 between 1923 and 1969
 
 rdrobust con yearat14 if age<60, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust con yearat14 if age<60, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fuzzy(leave)
 sum con if age<60 & yearat14>=1923 & yearat14<=1969
 
+# now same process (two rdrobusts one fuzzy one not) for con and yearat14 for those over 60
+# sum con if individuals were over 60 and 14 between 1932 and 1962
+
 rdrobust con yearat14 if age>=60, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust con yearat14 if age>=60, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fuzzy(leave)
 sum con if age>=60 & yearat14>=1932 & yearat14<=1962
+
+# now just run two rdrobusts on both conpart (whether individual is conservative
+# partisan) and perm (if indiviudal decided how they were voting before campaign)
+# like above, run one rdrobust with fuzzy(leave) and one without
+# sun conpart if 14 between 1934 and 1960, sum perm if 14 between 1935 and 1959
 
 rdrobust conpart yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust conpart yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fuzzy(leave)
@@ -637,12 +722,33 @@ sum perm if yearat14>=1935 & yearat14<=1959
 
 
 *** Footnote 13 reference
+
+# run two quick rdrobusts for a footnote
+# run the same function of conpart and yearat14 just one time for 
+# people over 60 and one for people below 60
+# cutoff is 1947, p=1, q=2, tri kernel and bwselect(IK)
+
 rdrobust conpart yearat14 if age<60, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust conpart yearat14 if age>=60, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 
 
 
 *** Table 3 Panel A: Economic policy preferences
+
+# table 3 investigates another implication of the data - does more high school education
+# increase support for conservative values in addition to just voting conservative
+# and of conservative values, does more education support conservative economic values or
+# noneconomic values in addition?
+# table 3 panel A investigates feelings toward conservative economic policy
+
+# Marshall investigated 4 conservative economic values: opposition to tax and spend policies, 
+# the belief that welfare spending has gone too far, opposition to income and wealth 
+# redistribution, and opposition to the belief that attempts to give women equal opportunities
+# have not gone far enough - all of these were run in a rdrobust with yearat 14
+# cutoff 1947, p=1, q=2, tri kernel and bwselect(IK)
+# in addition rdrobust was run for econ_values, which was a standardized, composite
+# score indicating the conservative economic preference of an individual
+
 rdrobust taxspendself yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust welfaretoofar yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust redist yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
@@ -650,6 +756,9 @@ rdrobust gender_not_too_much yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK
 sum gender_not_too_much if yearat14>=1931 & yearat14<=1963
 rdrobust econ_values yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 sum econ_values if yearat14>=1930 & yearat14<=1964
+
+# with the same 4 variables (and the composite econ_values variable) also
+# run a fuzzy rdrobust
 
 rdrobust taxspendself yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fuzzy(leave)
 rdrobust welfaretoofar yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fuzzy(leave)
@@ -660,6 +769,21 @@ rdrobust econ_values yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fuzzy(
 
 
 *** Table 3 Panel B: Non-economic policy preferences
+
+# after finding more edu did increase support for conservative economic policies 
+# (although not always significantly), Marshall investigated if more high school increased
+# support for more social conservative, and some social liberal values in Panel B of table3
+# Marshall found there was no significant support for conservative economic policies or
+# for liberal ones - indicating high school edu doesn't seem to effect either of them
+# and that the increased conservative voting is almost all economically linked
+
+# to do this rdrobust was again used
+# this time foremphasis on reducing crime over protecting citizen right (crime_rights_scale),
+# support for Britain leaving the European community (leave_europe), and opposition to abolishing
+# private education (end private edu)
+# rdrobust was also used for two liberal values of abortion and racial equality
+# all rdrobusts were run with cutoff 1947, p=1, q=2, tri kernel and bwselect(IK)
+
 rdrobust crime_rights_scale yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust leave_europe yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust end_priv_edu yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
@@ -667,6 +791,8 @@ rdrobust abortion_too_far yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 sum abortion_too_far if yearat14>=1933 & yearat14<=1961
 rdrobust raceequ_too_far yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 sum raceequ_too_far if yearat14>=1927 & yearat14<=1967
+
+# again the process was repeated for a fuzzy rdrobust
 
 rdrobust crime_rights_scale yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fuzzy(leave)
 rdrobust leave_europe yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fuzzy(leave)
@@ -677,13 +803,28 @@ rdrobust raceequ_too_far yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fu
 
 
 *** Political engagement alternative explanation
+
+# fuzzy and normal rdrobust were also run on inform_std_new and yearat14
+# to determine if more years of highschool simply lead to more political engagment
+# these results can be seen in table 4
+
 rdrobust inform_std_new yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust inform_std_new yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fuzzy(leave)
 
+# perserve original UK Election data so Marshall's analysis doesn't affect it
+
 preserve
 use "UK Election Data Replication.dta", clear
+
+# run two rdrobusts on turnout (total number of people who voted inelections) one fuzzy
+# and one not to see if it changed after 1947
+# sum turnout btwen 1929 and 1965 and then sum turnout overall
+
 rdrobust turnout yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
 rdrobust turnout yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK) fuzzy(leave)
 sum turnout if yearat14>=1929 & yearat14<=1965
 sum turnout
+
+# restore data to what it had looked like when we called preserve
+
 restore
