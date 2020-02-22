@@ -167,7 +167,18 @@ twoway (lpoly leave_l8 yearat14 if yearat14<1947 & yearat14>=1925, lcolor(gs14) 
 
 
 
+# create figure 3
+
 *** Figure 3: Reduced form
+
+# use twoway again to create a graphic - and use paranthesis to combine many different aspects
+# on one set of axis
+
+# once again, use two different lpolys - one for people 14 before 1947 and one for after
+# once again add a scatter to this data (for whole time range)
+# add specifications on color and size for all aspects, add axis labels and tables and 
+# rescale the y axis
+
 twoway (lpoly con yearat14 if yearat14>=1925 & yearat14<1947, lcolor(black) clwidth(thick) degree(4)) ///
   (lpoly con yearat14 if yearat14>=1947 & yearat14<=1970, lcolor(black) clwidth(thick) degree(4)) ///
   (scatter meancon14 yearat14 if yearat14>=1925 & yearat14<=1970 [weight=weight_14], msize(small) mcolor(gray)), ///
@@ -178,11 +189,14 @@ twoway (lpoly con yearat14 if yearat14>=1925 & yearat14<1947, lcolor(black) clwi
   
 ****************************** CONTINUITY TESTS
 
+# one of the appendix figures comes from another persons files, the link to these files is 
+# provided here
+
 *** Appendix Figure 1: McCrary test (need to use McCrary's ado file, available here: http://eml.berkeley.edu/~jmccrary/DCdensity/DCdensity.ado)
 noisily DCdensity yearat14, breakpoint(1947) b(1) h(5) generate(Xj Yj r0 fhat se_fhat)
 drop Xj Yj r0 fhat se_fhat
 
-
+# once again more figures use files from other people, link provided here
 
 *** Frandsen test (need to use Frandsen's "rddisttest" ado file, available here: https://economics.byu.edu/frandsen/Pages/Software.aspx)
 rddisttest yearat14, threshold(1947) discrete
@@ -191,12 +205,28 @@ rddisttest yearat14, threshold(1947) discrete
 
 ******************************* CONTINUITY IN OTHER VARIABLES
 
+# code to make figure 2
+
 *** Figure 2: Continuity graphs
+
+# use capture to suppress the results of the following code and store it in the scalar _rc
+# unless the output is 0 (in which nothing will occur)
+# in this case capture is used on another by ... sort: egen which creates a new column called 
+# meanyear which is the mean year for each set of yearat14 values
+# then a scatter plot is created with meanyear on y and yearat14 on x axisfor yearat14 between 1925
+# and 1970 - add specifications. Add labels to the graph
+# save the graph as a graph called g1.gph - replace any old copies of this file if there are any
+
 capture by yearat14, sort : egen meanyear = mean(year)
 twoway (scatter meanyear yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(black) msize(medsmall)), ///
   graphregion(fcolor(white) lcolor(white)) ylab(,nogrid) ytitle(Year) xtitle(Cohort: year aged 14) xline(1946.5, lcolor(black) lpattern(dash)) ///
   legend(off) title(Panel A: Survey year, color(black) size(medium)) xlab(1930[10]1970)
 graph save Graph "g1.gph", replace
+
+# once again use capture. this time make a new columne for meanmale (by yearat14 values)
+# create a scatterplot with meanmale on yand yearat14 on x axis (same year range and 
+# specifications of points and graph)
+# save graph and replace old files
 
 capture by yearat14, sort : egen meanmale = mean(male)
 twoway (scatter meanmale yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(black) msize(medsmall)), ///
@@ -204,11 +234,22 @@ twoway (scatter meanmale yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(bla
   legend(off) title(Panel B: Male, color(black) size(medium)) xlab(1930[10]1970)
 graph save Graph "g2.gph", replace
 
+# use capture,  make a new columne for meanwhite (by yearat14 values)
+# create a scatterplot with meanmale on yand yearat14 on x axis (same year range and 
+# specifications of points and graph)
+# save graph and replace old files
+
 capture by yearat14, sort : egen meanwhite = mean(white)
 twoway (scatter meanwhite yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(black) msize(medsmall)), ///
   graphregion(fcolor(white) lcolor(white)) ylab(,nogrid) ytitle(Proportion) xtitle(Cohort: year aged 14) xline(1946.5, lcolor(black) lpattern(dash)) ///
   legend(off) title(Panel C: White, color(black) size(medium)) xlab(1930[10]1970)
 graph save Graph "g3.gph", replace
+
+# use capture,  make a new columne for meanblack (by yearat14 values)
+# create a scatterplot with meanmale on yand yearat14 on x axis (same year range and 
+# specifications of points and graph)
+# save graph and replace old files
+
 
 capture by yearat14, sort : egen meanblack = mean(black)
 twoway (scatter meanblack yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(black) msize(medsmall)), ///
@@ -216,11 +257,16 @@ twoway (scatter meanblack yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(bl
   legend(off) title(Panel D: Black, color(black) size(medium)) xlab(1930[10]1970)
 graph save Graph "g4.gph", replace
 
+# same again for mean(asian)
+
 capture by yearat14, sort : egen meanasian = mean(asian)
 twoway (scatter meanasian yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(black) msize(medsmall)), ///
   graphregion(fcolor(white) lcolor(white)) ylab(,nogrid) ytitle(Proportion) xtitle(Cohort: year aged 14) xline(1946.5, lcolor(black) lpattern(dash)) ///
   legend(off) title(Panel E: Asian, color(black) size(medium)) xlab(1930[10]1970)
 graph save Graph "g5.gph", replace
+
+# again for fathermanual (which is a 0 or 1 variable that is 1 if the individuals father was 
+# a worker in manual labor)
 
 capture by yearat14, sort : egen meanmanual = mean(fathermanual)
 twoway (scatter meanmanual yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(black) msize(medsmall)), ///
@@ -228,22 +274,53 @@ twoway (scatter meanmanual yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(b
   legend(off) title(Panel F: Father manual/unskilled job, color(black) size(medium)) xlab(1930[10]1970)
 graph save Graph "g6.gph", replace
 
+# same for urate - which is a measurement ofthe unemployment rate at the time of thesurvey
+
 capture by yearat14, sort : egen meanurate = mean(urate)
 twoway (scatter meanurate yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(black) msize(medsmall)), ///
   graphregion(fcolor(white) lcolor(white)) ylab(,nogrid) ytitle(Rate (%)) xtitle(Cohort: year aged 14) xline(1946.5, lcolor(black) lpattern(dash)) ///
   legend(off) title(Panel G: National unemployment rate, color(black) size(medium)) xlab(1930[10]1970)
 graph save Graph "g7.gph", replace
 
+# same for average_earning
+
 twoway (scatter average_earnings yearat14 if yearat14>=1925 & yearat14<=1970, mcolor(black) msize(medsmall)), ///
   graphregion(fcolor(white) lcolor(white)) ylab(,nogrid) ytitle(Index (2000=100)) xtitle(Cohort: year aged 14) xline(1946.5, lcolor(black) lpattern(dash)) ///
   legend(off) title(Panel H: National average earnings, color(black) size(medium)) xlab(1930[10]1970)
 graph save Graph "g8.gph", replace
 
+ # use gr to combin the 3 graphs into one panel with 3 rows and three columns
+
 gr combine "g1" "g2" "g3" "g4" "g5" "g6" "g7" "g8", rows(3) cols(3) subtitle(, color(black) fcolor(white) lcolor(white)) graphregion(fcolor(white) lcolor(white) ifcolor(white) ilcolor(white))
 
 
+# appendix table
 
 *** Appendix Table 2: Continuity tests
+
+# for this table, rdrobust is used to generate robust standard errors for 
+# local polynomial regression discontinuity models (which are used to measure the impact
+# of a certain program on a given outcome)
+# A number of variables (year, male, white, black, asian, fathermanual),
+# are input as the dependent variable, while yearat14 is the independent
+# for all of them, c indicates the RD cut off - which in this case is 
+# the year 1947, p indicates the order of the local polynomial for the
+# points (1 was chosen indicating local linear regression), q indicates
+# the order of the local polynomial for bias correction (2 was chosen
+# indicating local quadratic regression), the kernel function indicates
+# the mathematical method used to construct the local polynomials, in this
+# case they chose tri (which is the default method), h is the bandwidth
+# used to construct the RD point estimator, 14.736 was chosen in these
+# cases (which comes from Imbens and Kalyanaraman (2012) optimal bandwidth)
+# the result of all these rdrobust commands returns lots of information
+# from running local polynomial regression on both sides of an indicated cut off (1947)
+# for this table, Marshall is investigating if other important variables
+# (but not voting conservative) have continuity after 1947, or if they
+# were also affected by the reform/change at the same time -- which could
+# confound observations of conservative votes changing after the reform
+# rdrobust will also create confidence intervals and standard errors for the
+# continuity measure value
+
 rdrobust year yearat14, c(1947) p(1) q(2) kernel(tri) h(14.736)
 rdrobust male yearat14, c(1947) p(1) q(2) kernel(tri) h(14.736)
 rdrobust white yearat14, c(1947) p(1) q(2) kernel(tri) h(14.736)
@@ -257,17 +334,61 @@ rdrobust fathermanual yearat14, c(1947) p(1) q(2) kernel(tri) h(14.736)
 
 ****************************** LOCAL LINEAR REGRESSION ANALYSIS
 
+# creating table 1 - which shows estimates on the 1947's affect on different variables
+# rdrobust will be used again to compare local linear regressions on either side of
+# a cutoff (1947)
+
 *** Table 1: Main estimates
+
+# first use rdrobust on leave (year left school) and yearat14 - use otherwise 
+# the same specifications for rdrobust as we did in the appendix table (cutoff at 1947
+# local linear regression and quadratic regression for bias correction, triangular
+# kernel method and optimal bandwidth)
+# this should return the continuity variable we used before also - showing how much
+# a trend in the variable changed after 1947 (and the associated measures of standard error)
+# then sum the leave variable if the individuals were 14 between 1933 and 1961
+
 rdrobust leave yearat14, c(1947) p(1) q(2) kernel(tri) h(14.736)
 sum leave if yearat14>=1933 & yearat14<=1961
+
+# repeat the same process for uni instead of leave - giving us
+# how much more/less people started going to university before and after
+# 1947 (uni is a 0 or 1 variable for if you went) and associated error terms
+# again after running rdrobust, sum uni values if yearat14 is between 1933 and 1961
+
 rdrobust uni yearat14, c(1947) p(1) q(2) kernel(tri) h(14.736)
 sum uni if yearat14>=1933 & yearat14<=1961
+
+# now run rdrobust on our con variable (whether or not someone voted conservative) and yearat14
+# use same cutoff and p, q, and kernel specifications, but this time use bwselect to specify
+# a bandwitdth selection procedure - IK is one of the options for a bandwidth selector proposed
+# by Imbens and Kalyanaraman (2012)
+
 rdrobust con yearat14, c(1947) p(1) q(2) kernel(tri) bwselect(IK)
+
+# run rdrobust on con again, this time add a fuzzy variable - this specifies leave (leave when left 
+# school) as the treatment status variable to implement a fuzzy regression discontinuity
+# which is another type of regression discontinuity 
+# again sum leave if the individuals were 14 between 1933 and 1961
+
 rdrobust con yearat14, c(1947) fuzzy(leave) p(1) q(2) kernel(tri) bwselect(IK)
 sum leave if yearat14>=1933 & yearat14<=1961
+
+# use areg to fit linear regressions including all the indicated variables
+# while absorbing the specified survey variable - which was the year the survey occured 
+
 areg con leave male white black asian sagesq-sagequart syearat14 syearat14sq syearat14cub syearat14quart, ro a(survey)
 areg con ib9.leave male white black asian sagesq-sagequart syearat14 syearat14sq syearat14cub syearat14quart, ro a(survey)
+
+# sum the con column if sample is estimated at a certain value
+
 summ con if e(sample)
+
+# run rdrobust 2 more times - first between lab (voting for the labour party) and
+# yearat14 (same specifications and use fuzzy(leave) model) and then between lib  (voted for 
+# libertarian party) and yearat14 (fuzzy(leave) model as well)
+# in both cases, sum lib if yearat14 is between 1933 and 1961
+
 rdrobust lab yearat14, c(1947) p(1) q(2) kernel(tri) h(14.736) fuzzy(leave)
 sum lib if yearat14>=1933 & yearat14<=1961
 rdrobust lib yearat14, c(1947) p(1) q(2) kernel(tri) h(14.736) fuzzy(leave)
@@ -278,6 +399,18 @@ sum lib if yearat14>=1933 & yearat14<=1961
 ****************************** ROBUSTNESS
 
 *** Figure 4: Different bandwidths and kernels
+
+# create figure 4, which shows us the 95% CIs (a measure of robustness) for 
+# different bandwidth values for different methods of measuring the effect of the
+# 1947 reform and the effect of years of schooling
+
+# run a sort of nested for loop to generate simulations to get the CIs from
+# rdrobust will be run on con and yearat14 with cutoff at 1947, p of 1, q of 2,
+# and kernel and h and fuzzy variables
+# for each value of leave (which will be the input into fuzzy), rdrobust will be run
+# for both tri and uni (which will be the input into kernel), rdrobust will be run
+# 18 times (testing values 2-20 as the bandwidth value)
+
 foreach t in "" leave {
 foreach k in tri uni {
 foreach h of numlist 2/20 {
@@ -285,6 +418,11 @@ foreach h of numlist 2/20 {
 }
 }
 }
+
+# the results of this loops were copied and pasted below - in order for 
+# them to be used in a graph for figure 4
+# the loop gave us coeficient and standard error values for all our different
+# bandwidths, kernel inputs, and versions
 
 * Note: copy these estimates from the above loop into the Stata data editor for graphical presentation
 bandwidth	coef	se	kernel	version
@@ -365,8 +503,24 @@ bandwidth	coef	se	kernel	version
 19	0.17652	0.06758	uni	years
 20	0.18333	0.06838	uni	years
 
+# to generate the minimum and maximum in the 95% CI from the standard error
+# and coeffecient - g function was used to generate a new column, min95
+# was calculated by subtracting 1.96*se from the coef, max95 was calculated
+# by adding 1.96*se to coef
+
 g min95 = coef - 1.96 * se
 g max95 = coef + 1.96 * se
+
+# next the 4 panels of figure 4 were created
+# twoway with many specifications was used to create the graphs, the first of which is a
+# scatter with coef on y axis and bandwidth on the x axis (between 2 and 20)
+# for this first graph, only choose points whose kernel value is tri and version is rf,
+# specify colors
+# use rcap to create a range plot with caps of min and max95 with bandwidth on the x axis
+# (again for this first plot only with kernel = tri and version = rf), specify the range is vertical
+# and the colors of the lines
+# add general info about the graph (no legent, white background, x and y axis labels)
+# save this graph as g1 (replace anyolder existing versions)
 
 twoway (scatter coef bandwidth if bandwidth>=2 & bandwidth<=20 & kernel=="tri" & version=="rf", mcolor(black)) ///
   (rcap min95 max95 bandwidth if bandwidth>=2 & bandwidth<=20 & kernel=="tri" & version=="rf", vertical lcolor(black)), ///
