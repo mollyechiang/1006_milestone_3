@@ -1,3 +1,8 @@
+# All my comments for milestone 3
+# will begin with '#'
+# because this is stata code, I will just be commenting on what the code is doing and why 
+# to the best of my ability and will not be reformatting the code at all
+
 *** Replication code for Marshall, "Education and voting Conservative: Evidence from a major schooling reform in Great Britain"
 
 *** 28th July, 2015
@@ -6,22 +11,22 @@
 
 ****************************** PRELIMINARIES
 
-# this is where 
+# this is where Marshall sets the working directory to access files in his analysis
 
 *** Set the relevant working directory
 cd "C:\Dropbox\UK Education and Voting"
 
-
+# open the log file
 
 *** Log analysis
 log using "Replication Results.smcl", replace
 
-
+# load the data set
 
 *** Load the dataset used throughout the analysis; the creation of the dataset (principally from the British Election Survey) is described in the Online Appendix
 use "UK Election Data Replication.dta", clear
 
-
+# use keep if to only investigate individuals that voted Conservative (vote_choice_sample == 1)
 
 *** Restrict to the sample used for the Conservative vote models (return to the broader sample containing turnout too below)
 keep if vote_choice_sample==1
@@ -32,12 +37,18 @@ keep if vote_choice_sample==1
 
 *** Proportion of Conservatives matches true vote share well
 
+# display the proportions Conservative votes
+
 di (37.9 * 7.96 + 35.8 * 7.56 + 43.9 * 5.95 + 42.4 * 13.01 + 42.2 * 12.27 + 41.9 * 11.80 + 30.7 * 14.37 + 31.7 * 8.62 + 32.4 * 12.32 + 36.1 * 6.15)/100
 
 
 
 
 ****************************** SUMMARY STATISTICS
+
+# creating appendix table by selecting a bunch of variables
+# the first table is different from the second in that it only contains data on individuals who 
+# were 14 between 1933 and 1961 
 
 *** Appendix Table 1: Summary statistics
 summ con lab lib leave min15 year male white black asian fathermanual age birthyear uni nonmanual conpart perm taxspendself welfaretoofar redist gender_not_too_much econ_values crime_rights_scale leave_europe end_priv_edu abortion_too_far raceequ_too_far inform_std_new if yearat14>=1933 & yearat14<=1961
@@ -47,13 +58,52 @@ summ con lab lib leave min15 year male white black asian fathermanual age birthy
 
 ****************************** GRAPHICAL ANALYSIS
 
+# a new variable caleld weight_14 will be generated for each value of yearat14 and will be equal
+# to the total number of inputs for each of the yearat14 values
+
 bysort yearat14 : g weight_14 = _N
+
+# a new variable called meancon14 will be generated for each set of data points 
+# with one value of yearat14 - and it will be the mean of the of the conservative votes
+# aka-all of the data points with the same yearat14 value will have the same meancon14 value
+# and that value will be the average of the con (whether they voted conservative or not) column
+# for that set of points with the same yearat14 value
+
 bysort yearat14 : egen meancon14 = mean(con)
+
+# just like with meancon14, a new variable called meanconpart14 will be created for each
+# set of yearat14 values. This new variable will be the mean of the conpart column,
+# which contains a 1 or 0 value indicating if the individual is conservative partisan or not
+
 bysort yearat14 : egen meanconpart14 = mean(conpart)
+
+# another variable created for each set of values with the same yearat14
+# this time named meanleave14 and is the average age at which the individuals left school
+# for each set of values with the same yearat14
+
 bysort yearat14 : egen meanleave14 = mean(leave)
+
+# same thing again, this time mean of taxspendself, which is a tax spend scale
+
 bysort yearat14 : egen meantaxspendself14 = mean(taxspendself)
+
+# same process of variable creation, this time for mean of welfaretoofar which is
+# a 0 or1 variable indicating if the individual took welfare too far or not
+
 bysort yearat14 : egen meanwelfaretoofar14 = mean(welfaretoofar)
+
+# again same process, this time mean of redist, which is a redistributed scale of
+# income and wealth from 0 to 4
+
 bysort yearat14 : egen meanredist14 = mean(redist)
+
+# generate a number of columns for students who left at different grades (level 8, 9, 10
+# 11, 12) - which will have a 1 if the student was under age 9, 10, 11, 12, 13 years
+# respectively and 0 if they did not (and only if there is a leave age value)
+# then create another column for each of these new columns called meanleave_## which
+# is the mean of the leave_l# column for each value of yearat14
+# this will give us an idea of the number of kids who left at each level of school
+# for each cohort of people who were all 14 at the same time 
 
 g leave_l8 = leave<9 if leave!=.
 by yearat14, sort : egen meanleave_l8 = mean(leave_l8)
@@ -66,10 +116,35 @@ by yearat14, sort : egen meanleave_l11 = mean(leave_l11)
 g leave_l12 = leave<13 if leave!=.
 by yearat14, sort : egen meanleave_l12 = mean(leave_l12)
 
+# start creating the first figure
+
 *** Figure 1: Trends in school leaving age
+
+# start with twoway function which is stata's way of indicating a graph will come next
+# many different things will be plotted on the same axis each with individual identifier variables
+# to combine all this stuff include each thing in its own set of parenthesis 
+
+# first use lpoly to create a local polynomial smooth plot with leave_18 on the y acis and yearat14
+# on the x axis - however, subset to only include individuals who were 14 between 1925 and 1947
+# add a specefic color, width of the line and degree of the line
+
 twoway (lpoly leave_l8 yearat14 if yearat14<1947 & yearat14>=1925, lcolor(gs14) clwidth(thick) degree(4)) ///
+  
+  # repeat the same use of lpoly and axis, but this time for individuals who were 14 between 1947 and 1970
+  # add the same specifications for color, width and degree
+  
   (lpoly leave_l8 yearat14 if yearat14>=1947 & yearat14<=1970, lcolor(gs14) clwidth(thick) degree(4)) ///
+  
+  # now plot the same information from the first lpoly as a scatter plot
+  # with its own weight, size, and color specifications
+  
   (scatter meanleave_l8 yearat14 if yearat14>=1925 & yearat14<=1970 [weight=weight_14], msize(small) mcolor(gs14)) ///
+  
+  # the process of: creating 2 different lpoly plots for those who are 14 before and after 1947
+  # to show the proportion of students leaving school after all the different grades in different years
+  # and then adding a scatterplot of the same data afterwards
+  # will be repeated for leaving level 9, 10, 11, and 12
+  
   (lpoly leave_l9 yearat14 if yearat14<1947 & yearat14>=1925, lcolor(gs11) clwidth(thick) degree(4)) ///
   (lpoly leave_l9 yearat14 if yearat14>=1947 & yearat14<=1970, lcolor(gs11) clwidth(thick) degree(4)) ///
   (scatter meanleave_l9 yearat14 if yearat14>=1925 & yearat14<=1970 [weight=weight_14], msize(small) mcolor(gs11)) ///
@@ -82,6 +157,11 @@ twoway (lpoly leave_l8 yearat14 if yearat14<1947 & yearat14>=1925, lcolor(gs14) 
   (lpoly leave_l12 yearat14 if yearat14<1947 & yearat14>=1925, lcolor(black) clwidth(thick) degree(4)) ///
   (lpoly leave_l12 yearat14 if yearat14>=1947 & yearat14<=1970, lcolor(black) clwidth(thick) degree(4)) ///
   (scatter meanleave_l12 yearat14 if yearat14>=1925 & yearat14<=1970 [weight=weight_14], msize(small) mcolor(black)), ///
+  
+  # add specifications for the graph - background colors, axis labels and titles
+  # add a vertical black line to indicate when 1947 was
+  # add a legend to give labels to the different times to leave school
+  
   graphregion(fcolor(white) lcolor(white)) ylab(,nogrid) ytitle(Proportion leaving) xtitle(Cohort: year aged 14) xline(1946.5, lcolor(black) lpattern(dash)) xlab(1925(5)1970) ///
   legend(nobox region(fcolor(white) margin(zero) lcolor(white)) lab(3 "Leave before 14") lab(6 "Leave before 15") lab(9 "Leave before 16") lab(12 "Leave before 17") lab(15 "Leave before 18") order(3 6 9 12 15) row(1)) 
 
